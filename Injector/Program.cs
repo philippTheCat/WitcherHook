@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 
 namespace Injector {
     internal class Program {
@@ -38,40 +39,44 @@ namespace Injector {
         public void IsInstalled(int clientPID)
         {
             Console.WriteLine("FileMonitor has injected FileMonitorHook into process {0}.\r\n", clientPID);
+            client = new NamedPipeClientStream(".", "WitcherSplit", PipeDirection.InOut, PipeOptions.Asynchronous);
+            client.Connect();
         }
 
-        /// <summary>
-        /// Output the message to the console.
-        /// </summary>
-        /// <param name="fileNames"></param>
-        public void ReportMessages(string[] messages)
-        {
-            for (int i = 0; i < messages.Length; i++)
-            {
-                Console.WriteLine(messages[i]);
-            }
-        }
-
+    
         public void ReportMessage(string message)
         {
             Console.WriteLine(message);
         }
 
-        /// <summary>
-        /// Report exception
-        /// </summary>
-        /// <param name="e"></param>
-        public void ReportException(Exception e)
-        {
-            Console.WriteLine("The target process has reported an error:\r\n" + e.ToString());
-        }
 
         int count = 0;
+        private NamedPipeClientStream client;
+
         /// <summary>
         /// Called to confirm that the IPC channel is still open / host application has not closed
         /// </summary>
         public void Ping()
         {
+        }
+
+        public void FactChanged(string factName, int factValue) {
+            int len = factName.Length + 4;
+            
+            var buf = new byte[len+1];
+            buf[0] = (byte) ((byte) len);
+
+            for (int i = 0; i < factName.Length; i++) {
+                buf[1 + i] = (byte) factName[i];
+            }
+
+            byte[] value = BitConverter.GetBytes(factValue);
+
+            for (int i = 0; i < 4; i++) {
+                buf[1 + factName.Length + i] = value[i];
+            }
+
+            client.WriteAsync(buf, 0, buf.Length);
         }
     }
 

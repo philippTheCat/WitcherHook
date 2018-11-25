@@ -86,14 +86,15 @@ namespace WitcherHook {
 
             FactUpdateHook update = Marshal.GetDelegateForFunctionPointer<FactUpdateHook>(factUpdateOrigPtr);
 
-            int len = Marshal.ReadInt32(factNamePtr + 8);
+            int len = Marshal.ReadInt32(factNamePtr + 8) -1;
             _server.ReportMessage("factNamePtr => " + factNamePtr);
             _server.ReportMessage("len => " + len);
             String factName = Marshal.PtrToStringUni(new IntPtr(Marshal.ReadInt64(factNamePtr)), len);
             
             
             _server.ReportMessage("called FactUpdate(factName=\"" + factName + "\",factValue=" + factValue + ",validity=" + validity + ")");
-            
+
+            _server.FactChanged(factName, factValue);
             
             return update(unknown, factNamePtr, factValue, unknown2, validity);
         }
