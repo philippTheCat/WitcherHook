@@ -61,6 +61,7 @@ namespace WitcherHook {
                 // Ping() or ReportMessages() will raise an exception if host is unreachable
             }
 
+            
             // Remove hooks
             hook.Dispose();
 
